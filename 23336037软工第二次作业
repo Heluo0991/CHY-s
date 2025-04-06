@@ -1,0 +1,187 @@
+#include <vector>
+#include <set>
+#include <algorithm>
+#include<iostream>
+using namespace std;
+
+vector<vector<set<int>>> lastRemainingCellInference(const vector<vector<int>>& grid) {
+    vector<vector<set<int>>> candidates(9, vector<set<int>>(9));
+
+    // 初始化所有未填写的单元格的候选值为1-9
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            if (grid[i][j] == 0) {
+                for (int num = 1; num <= 9; ++num) {
+                    candidates[i][j].insert(num);
+                }
+            }
+        }
+    }
+
+    // 检查行、列、宫格中的唯一候选值
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            if (grid[i][j] == 0) {
+                // 检查行
+                for (int num = 1; num <= 9; ++num) {
+                    bool isCandidate = true;
+                    for (int k = 0; k < 9; ++k) {
+                        if (k != j && grid[i][k] == 0 && candidates[i][k].count(num)) {
+                            isCandidate = false;
+                            break;
+                        }
+                    }
+                    if (isCandidate) {
+                        candidates[i][j].clear();
+                        candidates[i][j].insert(num);
+                        break;
+                    }
+                }
+
+                // 检查列
+                for (int num = 1; num <= 9; ++num) {
+                    bool isCandidate = true;
+                    for (int k = 0; k < 9; ++k) {
+                        if (k != i && grid[k][j] == 0 && candidates[k][j].count(num)) {
+                            isCandidate = false;
+                            break;
+                        }
+                    }
+                    if (isCandidate) {
+                        candidates[i][j].clear();
+                        candidates[i][j].insert(num);
+                        break;
+                    }
+                }
+
+                // 检查宫格
+                int boxRow = (i / 3) * 3;
+                int boxCol = (j / 3) * 3;
+                for (int num = 1; num <= 9; ++num) {
+                    bool isCandidate = true;
+                    for (int x = boxRow; x < boxRow + 3; ++x) {
+                        for (int y = boxCol; y < boxCol + 3; ++y) {
+                            if ((x != i || y != j) && grid[x][y] == 0 && candidates[x][y].count(num)) {
+                                isCandidate = false;
+                                break;
+                            }
+                        }
+                        if (!isCandidate) break;
+                    }
+                    if (isCandidate) {
+                        candidates[i][j].clear();
+                        candidates[i][j].insert(num);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return candidates;
+}
+
+
+vector<vector<set<int>>> possibleNumberInference(const vector<vector<int>>& grid) {
+    vector<vector<set<int>>> candidates(9, vector<set<int>>(9));
+
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            if (grid[i][j] == 0) {  // 只处理未填写的单元格
+                set<int> possible{1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+                // 排除同行已存在的数字
+                for (int col = 0; col < 9; ++col) {
+                    if (grid[i][col] != 0) {
+                        possible.erase(grid[i][col]);
+                    }
+                }
+
+                // 排除同列已存在的数字
+                for (int row = 0; row < 9; ++row) {
+                    if (grid[row][j] != 0) {
+                        possible.erase(grid[row][j]);
+                    }
+                }
+
+                // 排除同宫格已存在的数字
+                int boxRow = (i / 3) * 3;
+                int boxCol = (j / 3) * 3;
+                for (int x = boxRow; x < boxRow + 3; ++x) {
+                    for (int y = boxCol; y < boxCol + 3; ++y) {
+                        if (grid[x][y] != 0) {
+                            possible.erase(grid[x][y]);
+                        }
+                    }
+                }
+
+                candidates[i][j] = possible;
+            }
+        }
+    }
+
+    return candidates;
+}
+
+int main() {
+
+    vector<vector<int>> grid(9, vector<int>(9));
+
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {  
+            cin >> grid[i][j];
+        }
+    }
+
+    vector<vector<set<int>>> candidates(9, vector<set<int>>(9));
+
+   candidates = lastRemainingCellInference(grid);
+   //candidates = possibleNumberInference(grid);
+    // 打印候选集
+    for (int i = 0; i < 9; ++i) {
+        for (int j = 0; j < 9; ++j) {
+            cout << "Cell[" << i << "][" << j << "]: ";
+            for (int num : candidates[i][j]) {
+                cout << num << " ";
+            }
+            cout << endl;
+        }
+    }
+    return 0;
+}
+/*test data:
+{
+2 0 0 0 7 0 0 3 8
+0 0 0 0 0 6 0 7 0
+3 0 0 0 4 0 6 0 0
+0 0 8 0 2 0 7 0 0
+1 0 0 0 0 0 0 0 6
+0 0 7 0 3 0 4 0 0
+0 0 4 0 8 0 0 0 9
+0 6 0 4 0 0 0 0 0
+9 1 0 0 6 0 0 0 2
+
+
+0 7 0 4 0 8 0 2 9
+0 0 2 0 0 0 0 0 4
+8 5 4 0 2 0 0 0 7
+0 0 8 3 7 4 2 0 0
+0 2 0 0 0 0 0 0 0
+0 0 3 2 6 1 7 0 0
+0 0 0 0 9 3 6 1 2
+2 0 0 0 0 0 4 0 3
+1 3 0 6 4 2 0 7 0
+
+6 0 0 0 0 0 5 3 8
+7 0 0 0 1 8 0 0 0
+0 0 5 9 0 0 0 4 0
+4 9 2 0 0 1 6 0 0
+1 0 0 3 0 0 0 2 0
+0 0 6 0 2 7 0 0 9
+0 7 0 0 0 0 9 0 2
+0 0 0 0 3 0 4 1 0
+9 6 0 7 4 0 0 0 0
+
+
+
+}*/
